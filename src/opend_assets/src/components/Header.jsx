@@ -15,12 +15,22 @@ import { opend } from "../../../declarations/opend";
 function Header() {
   // ----- STATE ------
   const [userOwnedGallery, setUserOwnedGallery] = useState();
+  const [listingGallery, setListingGallery] = useState();
 
+  // TO SET OUR GALLERY COMPONENTS WE NEED SOME NFT ID's
   async function getNFTs() {
     // * returns an array of the owned Nfts (Principals) of the given user
     const userNFTIds = await opend.getOwnedNFTs(CURRENT_USER_ID);
     // update the gallery in order to render it with the given ids of the given uesr
-    setUserOwnedGallery(<Gallery title="My NFT's" ids={userNFTIds} />);
+    setUserOwnedGallery(
+      <Gallery title="My NFT's" ids={userNFTIds} role="collection" />
+    );
+
+    // * return the principal ids of the listed NFTs
+    const listedNFTIds = await opend.getListedNFTs();
+    setListingGallery(
+      <Gallery title="Listed NFT's" ids={listedNFTIds} role="discover" />
+    );
   }
 
   // when component is first loaded, get the nfts of the current user / gallery
@@ -64,7 +74,7 @@ function Header() {
           <img className="bottom-space" src={homeImage} />
         </Route>
         <Route path="/discover" exact>
-          <h1>Discover</h1>
+          {listingGallery}{" "}
         </Route>
 
         <Route path="/minter" exact>

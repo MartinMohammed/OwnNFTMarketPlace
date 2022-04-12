@@ -8,9 +8,11 @@ import { opend } from "../../../declarations/opend";
 
 import logo from "../../assets/logo.png";
 import Button from "./Button";
+import PriceLabel from "./PriceLabel";
+import CURRENT_USER_ID from "../index";
 
 function Item(props) {
-  // React state variables
+  // -------- React state variables ----------
   // initial state = undefined
   const [name, setName] = useState();
   const [owner, setOwner] = useState("");
@@ -20,6 +22,7 @@ function Item(props) {
   const [loaderHidden, setLoaderHidden] = useState(true);
   const [blur, setBlur] = useState();
   const [sellStatus, setSellStatus] = useState("");
+  const [priceLabel, setPriceLabel] = useState();
 
   // * NEED ID TO access the canister and call its methods (get)
   // Datatype Principal
@@ -49,42 +52,58 @@ function Item(props) {
       canisterId: id,
     });
 
-    //  now call any methods that are inside the NFT actor
+    //  CALL NFT METHODS
     const name = await NFTActor.getName();
     const owner = await NFTActor.getOwner();
-    // return type is a Nat8 array / to make it recognizable for javascript
-    const imageData = await NFTActor.getAsset();
 
     // ! -------------------- CONVERT NAT8 Array FROM NFT ACTOR (ICP) TO IMAGE URL ------------------------
+    const imageData = await NFTActor.getAsset();
     // * convert to Uint8Array
     // UINT8 is an 8-bit unsigned integer
     const imageContent = new Uint8Array(imageData);
     // convert imageUrl out of the Uint8Array
     // create a Url out of a blob object -  blob datatype easy datatype that can be converted from many different formats
-
     const image = URL.createObjectURL(
       // some additional configs such as the MIME type
       // .Buffer to turn it to a array buffer
       new Blob([imageContent.buffer], { type: "image/png" })
     );
 
-    // Initial rendering check if the current Item is already listed
     setName(name);
     // from Principal Import
     setOwner(owner.toText());
     setImage(image);
-    const nftIsListed = await opend.isListed(id);
-    if (nftIsListed) {
-      // set listed Status
-      setSellStatus("Listed");
-      setOwner("OpenD");
-      setBlur({
-        // some css - blur = trüben, verzerren
-        filter: "blur(4px)",
-      });
-    } else {
-      setButton(<Button handleClick={handleSell} text={"Sell"} />);
+
+    // Render Items for the collection
+    if (props.role == "collection") {
+      // Initial rendering check if the current Item is already listed
+      const nftIsListed = await opend.isListed(id);
+      if (nftIsListed) {
+        // set listed Status
+        setSellStatus("Listed");
+        setOwner("OpenD");
+        setBlur({
+          // some css - blur = trüben, verzerren
+          filter: "blur(4px)",
+        });
+      } else {
+        setButton(<Button handleClick={handleSell} text={"Sell"} />);
+      }
+      // RENDER ITEMS FOR DISCOVERY / LISTED NFTS = NO BLUR / DIFFERENT BUTTON
+    } else if (props.role == "discover") {
+      // ! The person who listed this nft should not be able to buy it
+      const originalOwner = await opend.getOriginalOwner(id);
+      // * CHECK IF THE CURRENT USER THAT IS LOGGED IS, IS AT THE SAME TIME THE NFT LISTER
+      if (originalOwner.toText() != CURRENT_USER_ID) {
+        setButton(<Button handleClick={handleBuy} text={"Buy"} />);
+      }
+      const price = await opend.getListedNFTPrice(id);
+      setPriceLabel(<PriceLabel sellPrice={price.toString()} />);
     }
+  }
+
+  async function handleBuy() {
+    console.log("Buy was triggered.");
   }
 
   useEffect(() => {
@@ -117,7 +136,8 @@ function Item(props) {
       filter: "blur(4px)",
     });
     setLoaderHidden(false);
-    const listingResult = await opend.listItem(id, Number(price));
+    // ceiling to avoid errors during passing float to Motoko backend
+    const listingResult = await opend.listItem(id, Math.ceil(Number(price)));
     console.log("listing: ", listingResult);
 
     // If success: Succesful listed the item in the mapOfListings
@@ -154,6 +174,7 @@ function Item(props) {
           <div></div>
         </div>
         <div className="disCardContent-root">
+          {priceLabel}
           <h2 className="disTypography-root makeStyles-bodyText-24 disTypography-h5 disTypography-gutterBottom">
             {name}
             <span className="purple-text"> {sellStatus} </span>

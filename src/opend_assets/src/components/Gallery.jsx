@@ -11,7 +11,7 @@ function Gallery(props) {
     if (props.ids != undefined) {
       setItems(
         props.ids.map((NFTId) => {
-          return <Item id={NFTId} key={NFTId.toText()} />;
+          return <Item id={NFTId} key={NFTId.toText()} role={props.role} />;
         })
       );
     }

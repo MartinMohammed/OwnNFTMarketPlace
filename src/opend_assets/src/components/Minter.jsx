@@ -105,7 +105,7 @@ function Minter() {
         <div className="horizontal-center">
           {/* // to create Actor / fetch informations  */}
           {/* // show the minted nft  */}
-          <Item id={nftPrincipal.toText()} />
+          <Item id={nftPrincipal} />
         </div>
       </div>
     );

@@ -3,6 +3,7 @@ import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import HashMap "mo:base/HashMap";
 import List "mo:base/List";
+import Iter "mo:base/Iter";
 
 // import nft actor 
 import NFTActorClass "./../NFT/nft";
@@ -21,7 +22,7 @@ actor OpenD {
     */
     // * new datatype | Schema
     private type Listing = {
-        // props 
+        // props / original owner 
         itemOwner: Principal;
         itemPrice: Nat; 
     };
@@ -83,6 +84,13 @@ actor OpenD {
         return List.toArray(userNFTs);
     };
 
+    // ----------------- GET ALL THE LISTED NFTS ---------------
+    public query func getListedNFTs() : async [Principal]{
+        // return an Iter type 
+        let ids =  Iter.toArray(mapOfListings.keys());
+        return ids; 
+    };
+
     // ------------------- KEEP TRACK OF LISTED ITEMS ----------------
     // NFT ID & its listing price of the given owner from msg.caller
     public shared(msg) func listItem(id: Principal, price: Nat) : async Text{
@@ -121,4 +129,25 @@ actor OpenD {
         // ! this actor is not a actor class
         return Principal.fromActor(OpenD);
     };
+
+
+    // ------------- GET THE ORIGINAL OWNER / NOT CURRENT OF A NFT -------------
+    // take principal of the nft and return the principal of the original owner 
+    public query func getOriginalOwner(id: Principal) : async Principal {
+        var listing : Listing = switch(mapOfListings.get(id)){
+            // this nft if does not correspond to any Nft that is listed : return empty Principal 
+            case null return Principal.fromText("");
+            case (?result) result; 
+        };
+        return listing.itemOwner; 
+    };  
+
+    // ---------- GET CURRENT NFT PRICE ---------------
+    public query func getListedNFTPrice(id: Principal) : async Nat{
+        var listing : Listing = switch(mapOfListings.get(id)){
+            case null return 0;
+            case (?result) result; 
+        };
+        return listing.itemPrice; 
+    }
 };
