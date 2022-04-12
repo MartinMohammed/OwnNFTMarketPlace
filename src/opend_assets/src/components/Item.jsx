@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { HttpAgent, Actor } from "@dfinity/agent";
+
+// allows us to work with our canister in the workend > IDL => translated functions / bridge file
 import { idlFactory } from "../../../declarations/nft";
+import { idlFactory as tokenIdlFactory } from "../../../declarations/token";
+
 import { Principal } from "@dfinity/principal";
 
 // access the IDL methods of the actors
@@ -23,6 +27,7 @@ function Item(props) {
   const [blur, setBlur] = useState();
   const [sellStatus, setSellStatus] = useState("");
   const [priceLabel, setPriceLabel] = useState();
+  const [shouldDisplay, setDisplay] = useState(true);
 
   // * NEED ID TO access the canister and call its methods (get)
   // Datatype Principal
@@ -42,6 +47,7 @@ function Item(props) {
   agent.fetchRootKey();
 
   // ? javascript closure
+  // * --------------- NFT ACTOR OF THE CURRENT INSTANCE (THIS) -------------
   let NFTActor;
   // Only call once | when item components gets rendered
   async function loadNFT() {
@@ -104,6 +110,32 @@ function Item(props) {
 
   async function handleBuy() {
     console.log("Buy was triggered.");
+    setLoaderHidden(false);
+
+    // * useTokenActor = interact with the canister / access its props & use his methods
+    const tokenActor = Actor.createActor(tokenIdlFactory, {
+      agent,
+      // actual id of our token canister
+      canisterId: Principal.fromText("txssk-maaaa-aaaaa-aaanq-cai"),
+    });
+
+    // * TRANSFERRING THE MONEY FROM THE BUYER TO THE SELLER -------
+    const sellerId = await opend.getOriginalOwner(id);
+    const itemPrice = await opend.getListedNFTPrice(id);
+    // * the caller of the function } the frontend : the buyer
+    const transferStatus = await tokenActor.transfer(sellerId, itemPrice);
+    if (transferStatus == "Success") {
+      // REMOVE THE NFT FROM LISTING / REMOVE NFT FORM SELLER POSSESSION / ADD NFT TO BUYER POSSESSION;
+      const transferResult = await opend.completePurchase(
+        id,
+        sellerId,
+        CURRENT_USER_ID
+      );
+      console.log("purchase: ", transferResult);
+      setLoaderHidden(true);
+      setDisplay(false);
+    }
+    console.log(transferStatus);
   }
 
   useEffect(() => {
@@ -114,6 +146,7 @@ function Item(props) {
   // * not sure if state input is updated before we use to sell item or set price
   let price;
   // ------------- ASK USER FOR PRICE ----------
+  // * same as HANDLE LIST
   function handleSell() {
     console.log("Sell clicked");
     setPriceInput(
@@ -137,6 +170,7 @@ function Item(props) {
     });
     setLoaderHidden(false);
     // ceiling to avoid errors during passing float to Motoko backend
+    // UPDATE listedItems hashmap / create listing with nft id & private type itemOwner, itemPrice
     const listingResult = await opend.listItem(id, Math.ceil(Number(price)));
     console.log("listing: ", listingResult);
 
@@ -147,6 +181,7 @@ function Item(props) {
       // now we need to get the particular nft that was clicked | props.id
       // new owner will be the opend canister
       const openDId = await opend.getOpenDCanisterID();
+      // GIVE OWNERSHIP OPEND
       const transferResult = await NFTActor.transferOwnership(openDId);
       console.log("transfer: ", transferResult);
       if (transferResult === "Success") {
@@ -160,7 +195,11 @@ function Item(props) {
   }
 
   return (
-    <div className="disGrid-item">
+    // SHOW THIS ITEM NOT IN THE DISCOVER PAGE - WHEN IT IS SOLD
+    <div
+      style={{ display: shouldDisplay ? "inline" : "none" }}
+      className="disGrid-item"
+    >
       <div className="disPaper-root disCard-root makeStyles-root-17 disPaper-elevation1 disPaper-rounded">
         <img
           className="disCardMedia-root makeStyles-image-19 disCardMedia-media disCardMedia-img"

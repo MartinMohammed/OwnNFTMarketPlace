@@ -149,5 +149,47 @@ actor OpenD {
             case (?result) result; 
         };
         return listing.itemPrice; 
-    }
+    };
+
+    /* 
+    Args: Nft principal, owner, newOwner 
+    */
+    public shared(msg) func completePurchase(id: Principal, ownerId: Principal, newOwnerId: Principal) : async Text{
+
+        // * ACCESS ITS PROS & METHODS
+        var purchasedNFT : NFTActorClass.NFT = switch(mapOfNFTS.get(id)){
+            case null return "NFT does not exist";
+            case (?result) result; 
+        };
+        // transfer the nft to the new owner 
+        let transferResult = await purchasedNFT.transferOwnership(ownerId);
+        if (transferResult == "Success"){
+            // ------------------ REMOVE & UPDATE -----------------
+            // * remove the Listing type of the nft from the listed hashmap 
+            mapOfListings.delete(id);
+
+            // * REMOVE THE NFT (FROM THE LIST) OF THE POSSESSION OF THE SELLER } mapOfOwners 
+            var ownedNFTsSeller : List.List<Principal> = switch(mapOfOwners.get(ownerId)){
+                // NULL => owner does not exist yet = no nfts owned 
+                case null List.nil<Principal>(); 
+                case (?result) result; 
+            };
+            // * for each item in the given List do logic with the function and return bool if remain item } in total return new array 
+            ownedNFTsSeller := List.filter(ownedNFTsSeller, func(listItemId: Principal) : Bool {
+                // canister id of the given nft != id of the bought nft 
+                return listItemId != id; 
+            });
+            // Todo: Update that in the hashmap } mapOfOwners
+            mapOfOwners.put(ownerId, ownedNFTsSeller);
+
+
+
+            // * ADD THE NFT (INTO THE LIST) OF THE POSSESSION OF THE BUYER } mapOfOwners;
+            addToOwnershipMap(newOwnerId, id);
+            return "Success";
+        };
+        return transferResult; 
+    };
+
+
 };
