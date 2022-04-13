@@ -22,7 +22,7 @@ actor OpenD {
     */
     // * new datatype | Schema
     private type Listing = {
-        // props / original owner 
+        // props / original 
         itemOwner: Principal;
         itemPrice: Nat; 
     };
@@ -106,6 +106,7 @@ actor OpenD {
         if(Principal.equal(owner, msg.caller)){
             // actual owner is allowed to list the NFT
             let newListing : Listing = {
+                // current NFT owner 
                 itemOwner = owner;
                 itemPrice = price; 
             };
@@ -161,7 +162,7 @@ actor OpenD {
             case null return "NFT does not exist";
             case (?result) result; 
         };
-        // transfer the nft to the new owner 
+        // SET THE NEW OWNER FOR THE NFT 
         let transferResult = await purchasedNFT.transferOwnership(ownerId);
         if (transferResult == "Success"){
             // ------------------ REMOVE & UPDATE -----------------
@@ -174,14 +175,15 @@ actor OpenD {
                 case null List.nil<Principal>(); 
                 case (?result) result; 
             };
+
+            // * -------------- NFT CHANGE ITS POSSESSIONS (BESITZTÜMER) -------------
             // * for each item in the given List do logic with the function and return bool if remain item } in total return new array 
             ownedNFTsSeller := List.filter(ownedNFTsSeller, func(listItemId: Principal) : Bool {
                 // canister id of the given nft != id of the bought nft 
                 return listItemId != id; 
             });
-            // Todo: Update that in the hashmap } mapOfOwners
+            // * UPDATE THE LIST OF OWNED NFTS FOR THE SELLER } mapOfOwners; 
             mapOfOwners.put(ownerId, ownedNFTsSeller);
-
 
 
             // * ADD THE NFT (INTO THE LIST) OF THE POSSESSION OF THE BUYER } mapOfOwners;

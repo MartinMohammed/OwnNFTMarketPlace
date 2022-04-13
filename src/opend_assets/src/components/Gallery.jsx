@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
-import Item from "./Item";
 import { Principal } from "@dfinity/principal";
 
+// Components
+import Item from "./Item";
+
 function Gallery(props) {
+  // NFT ITEMS
   const [items, setItems] = useState();
 
-  // create a NFT Item to show it
   function fetchNFTs() {
-    // if the user has some owning nfts
+    // IF IN GIVEN ARRAY are some Principal Id's of the NFTs to create an Item
     if (props.ids != undefined) {
       setItems(
+        // RETURN AN ARRAY OF NFT ITEMS
         props.ids.map((NFTId) => {
+          // role either: discover/ collection
           return <Item id={NFTId} key={NFTId.toText()} role={props.role} />;
         })
       );

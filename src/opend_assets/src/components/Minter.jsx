@@ -1,27 +1,23 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { opend } from "../../../declarations/opend";
 import { Principal } from "@dfinity/principal";
+import { opend } from "../../../declarations/opend";
+
+// Main backend
 import Item from "./Item";
 
 function Minter() {
   // useForm - not native react hook
   // * =>object that we can tap into in order to register and add in all of the inputs
   // * that the user create on our form
-
-  // init empty
   const { register, handleSubmit } = useForm();
+
   const [nftPrincipal, setNFTPrincipal] = useState("");
   const [loaderHidden, setLoaderHidden] = useState(true);
 
-  // trigger this function by handleSubmit
+  // * triggered by handleSubmit / pass Input VALUES
   async function onSubmit(data) {
     setLoaderHidden(false);
-
-    // registered name
-    // console.log(data.name);
-    // * return a fileList - upload multiple files
-    // console.log(data.image[0]);
 
     const name = data.name;
 
@@ -37,18 +33,17 @@ function Minter() {
     const imageByteData = [...new Uint8Array(imageArray)];
 
     // ! ------------------- MINTING PROCESS ---------------
-    // mint nft via main.mo = main backend (store nfts in hashmap) to create programmtically new canisters
-    // backend 2 backend interaction
+    //  * mint nft via main backend (store nfts in hashmap: mapOfNFTS)
+    //  * to create programmtically new canisters backend-to-backend interaction
 
-    // create a new canister via main.mo (opend)
     const newNFTID = await opend.mint(imageByteData, name);
     setNFTPrincipal(newNFTID);
-
     setLoaderHidden(true);
   }
 
+  // * Only Mint on NFT once a Minter Component rendering (states will be reseted)
+  // IF NO NFT WAS MINTED yet
   if (nftPrincipal == "") {
-    // IF NO NFT WAS MINTED yet
     return (
       <div className="minter-container">
         <div hidden={loaderHidden} className="lds-ellipsis">
@@ -103,7 +98,6 @@ function Minter() {
           Minted!
         </h3>
         <div className="horizontal-center">
-          {/* // to create Actor / fetch informations  */}
           {/* // show the minted nft  */}
           <Item id={nftPrincipal} />
         </div>

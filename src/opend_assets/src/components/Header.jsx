@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { BrowserRouter, Link, Switch, Route } from "react-router-dom";
+
+import CURRENT_USER_ID from "../index";
+
+// Static assets
 import logo from "../../assets/logo.png";
 import homeImage from "../../assets/home-img.png";
 
-// * Switch is gonna look which of these links is triggerd and render the appropiate react component
-import { BrowserRouter, Link, Switch, Route } from "react-router-dom";
+import { opend } from "../../../declarations/opend";
+
+// Components
 import Minter from "./Minter";
 import Gallery from "./Gallery";
-
-// id of the anonymous user / browser unauthenticated
-import CURRENT_USER_ID from "../index";
-
-import { opend } from "../../../declarations/opend";
 
 function Header() {
   // ----- STATE ------
@@ -19,29 +20,30 @@ function Header() {
 
   // TO SET OUR GALLERY COMPONENTS WE NEED SOME NFT ID's
   async function getNFTs() {
-    // * returns an array of the owned Nfts (Principals) of the given user
+    // * REUTRN: Array of Principals (owned NFTs) of provided user;
     const userNFTIds = await opend.getOwnedNFTs(CURRENT_USER_ID);
-    // update the gallery in order to render it with the given ids of the given uesr
+    // RENDER: USER OWNED NFTs
     setUserOwnedGallery(
       <Gallery title="My NFT's" ids={userNFTIds} role="collection" />
     );
 
-    // * return the principal ids of the listed NFTs
+    // * RETURN: Array of Principals (listed NFT's);
     const listedNFTIds = await opend.getListedNFTs();
     setListingGallery(
       <Gallery title="Listed NFT's" ids={listedNFTIds} role="discover" />
     );
   }
 
-  // when component is first loaded, get the nfts of the current user / gallery
   useEffect(() => {
+    // Initial rendering: render userOwnedGallery; setListingGallery;
+    // } => fetch NFT Principals from the Backend
     getNFTs();
   }, []);
 
   return (
     // * ---------------- NAVIGATION WITH REACT ------------
     // allow us to define Links
-    // refresh header => getNfTs() => updateGallery() => getNfts()
+    // refresh header => getNFTs() => rerender Gallery = fetch new Items, if available?
     <BrowserRouter forceRefresh={true}>
       <div className="app-root-1">
         <header className="Paper-root AppBar-root AppBar-positionStatic AppBar-colorPrimary Paper-elevation4">
@@ -68,6 +70,7 @@ function Header() {
           </div>
         </header>
       </div>
+      {/* LOOK AT CURRENT ROUTE AND RENDER CORRESPONDING COMPONENT - DYNAMIC RENDERING */}
       <Switch>
         {/* // add some routes  */}
         <Route path="/" exact>

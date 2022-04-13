@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import App from "./components/App";
 import { Principal } from "@dfinity/principal";
 
+// UNAUTHENTICATED (ANONYMOUS) FRONTEND USER
 const CURRENT_USER_ID = Principal.fromText("2vxsx-fae");
 export default CURRENT_USER_ID;
 
