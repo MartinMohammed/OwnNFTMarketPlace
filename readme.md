@@ -1,4 +1,4 @@
-# Opend - the one & only not fake NFT Marketplace (LMAO)
+# Opend - the one & only not fake NFT Marketplace 
 
 
 ## Previews:
