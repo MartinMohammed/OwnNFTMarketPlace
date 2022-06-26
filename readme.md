@@ -1,8 +1,3 @@
-# Opend - the one & only not fake NFT Marketplace 
-
-
-## Previews:
-
 # Main: 
 
 ![Main](./previews/main.jpeg)
